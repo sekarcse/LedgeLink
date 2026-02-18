@@ -1,0 +1,30 @@
+@inherits LayoutComponentBase
+@inject LedgeLink.Participant.UI.Domain.Models.ParticipantContext Participant
+
+<div class="layout">
+    <header class="header" style="border-bottom: 4px solid @Participant.Color">
+        <div class="header-inner">
+            <div class="header-left">
+                <div class="logo-badge" style="background: @Participant.Color">@Participant.LogoInitial</div>
+                <div class="header-title">
+                    <span class="ledgelink-brand">LedgeLink</span>
+                    <span class="participant-name">@Participant.Name</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="role-chip" style="border-color: @Participant.Color; color: @Participant.Color">
+                    @Participant.Role
+                </span>
+                <span class="live-dot-wrapper">
+                    <span class="live-dot"></span>
+                    <span class="live-label">LIVE</span>
+                </span>
+            </div>
+        </div>
+    </header>
+    <main class="main-content">@Body</main>
+    <footer class="footer">
+        <span>LedgeLink POC — Real-Time Distributed Trade Settlement</span>
+        <span>MongoDB Change Streams · .NET Aspire · RabbitMQ · Clean Architecture</span>
+    </footer>
+</div>

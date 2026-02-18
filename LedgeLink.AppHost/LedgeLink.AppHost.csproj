@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.1.1" />
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>ledgelink-apphost</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.MongoDB" Version="13.1.1" />
+    <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" Version="13.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LedgeLink.Distributor.API\LedgeLink.Distributor.API.csproj" />
+    <ProjectReference Include="..\LedgeLink.Validator.Worker\LedgeLink.Validator.Worker.csproj" />
+    <ProjectReference Include="..\LedgeLink.Settlement.Worker\LedgeLink.Settlement.Worker.csproj" />
+    <ProjectReference Include="..\LedgeLink.Participant.UI\LedgeLink.Participant.UI.csproj" />
+    <ProjectReference Include="..\LedgeLink.ServiceDefaults\LedgeLink.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

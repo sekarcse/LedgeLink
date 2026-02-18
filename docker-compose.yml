@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # MongoDB for persistence
+  mongodb:
+    image: mongo:latest
+    container_name: ledgelink-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: mongosh -u root -p password --eval 'db.adminCommand("ping")' --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Azure Service Bus Emulator
+  service-bus-emulator:
+    image: mcr.microsoft.com/azure-messaging/service-bus-emulator:latest
+    container_name: ledgelink-service-bus
+    ports:
+      - "5672:5672"
+      - "9600:9600"
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - service-bus_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongodb_data:
+  service-bus_data:
+
+networks:
+  default:
+    name: ledgelink-network

@@ -1,0 +1,12 @@
+C:\Personal Projects\LedgeLink\LedgeLink.Shared\bin\Debug\net9.0\LedgeLink.Shared.deps.json
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\bin\Debug\net9.0\LedgeLink.Shared.dll
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\bin\Debug\net9.0\LedgeLink.Shared.pdb
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.csproj.AssemblyReference.cache
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.GeneratedMSBuildEditorConfig.editorconfig
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.AssemblyInfoInputs.cache
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.AssemblyInfo.cs
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.csproj.CoreCompileInputs.cache
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.dll
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\refint\LedgeLink.Shared.dll
+c:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\LedgeLink.Shared.pdb
+C:\Personal Projects\LedgeLink\LedgeLink.Shared\obj\Debug\net9.0\ref\LedgeLink.Shared.dll

@@ -1,0 +1,57 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# Aspire
+ledgelink-mongo-data/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+
+# Docker
+ledgelink_mongodb_data/
+service-bus_data/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Misc
+*.swp
+*.tmp
+*.bak
+*.old
+
+# Ignore local settings
+appsettings.Development.json
+appsettings.Local.json
+
+# Ignore test results
+TestResults/
+
+# Ignore build outputs
+publish/
+
+# Ignore package lock files
+package-lock.json
+yarn.lock
+
+# Ignore coverage
+coverage/
+
+# Ignore generated files
+*.generated.cs

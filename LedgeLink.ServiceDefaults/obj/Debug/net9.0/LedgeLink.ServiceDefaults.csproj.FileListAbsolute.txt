@@ -1,0 +1,12 @@
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\bin\Debug\net9.0\LedgeLink.ServiceDefaults.deps.json
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\bin\Debug\net9.0\LedgeLink.ServiceDefaults.dll
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\bin\Debug\net9.0\LedgeLink.ServiceDefaults.pdb
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.csproj.AssemblyReference.cache
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.GeneratedMSBuildEditorConfig.editorconfig
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.AssemblyInfoInputs.cache
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.AssemblyInfo.cs
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.csproj.CoreCompileInputs.cache
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.dll
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\refint\LedgeLink.ServiceDefaults.dll
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\LedgeLink.ServiceDefaults.pdb
+c:\Personal Projects\LedgeLink\LedgeLink.ServiceDefaults\obj\Debug\net9.0\ref\LedgeLink.ServiceDefaults.dll

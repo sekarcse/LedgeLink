@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ledgelink-settlement-worker</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.MongoDB.Driver"           Version="9.1.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus"      Version="7.18.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting"    Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LedgeLink.ServiceDefaults\LedgeLink.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\LedgeLink.Shared\LedgeLink.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

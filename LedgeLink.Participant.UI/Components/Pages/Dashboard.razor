@@ -1,0 +1,155 @@
+@page "/"
+@using LedgeLink.Shared.Domain.Enums
+@using LedgeLink.Shared.Domain.Models
+@using LedgeLink.Participant.UI.Application.Services
+@using LedgeLink.Participant.UI.Domain.Models
+@inject TradeStreamService  Stream
+@inject ParticipantContext  Participant
+@implements IAsyncDisposable
+@rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
+
+<PageTitle>LedgeLink — @Participant.Name</PageTitle>
+
+<!-- Stats bar -->
+<div class="dashboard">
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-value">@_trades.Count</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card stat-settled">
+            <div class="stat-value">@_trades.Count(t => t.Status == TradeStatus.Settled)</div>
+            <div class="stat-label">Settled</div>
+        </div>
+        <div class="stat-card stat-pending">
+            <div class="stat-value">@_trades.Count(t => t.Status is TradeStatus.Pending or TradeStatus.Validated)</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card stat-rejected">
+            <div class="stat-value">@_trades.Count(t => t.Status == TradeStatus.Rejected)</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+        <div class="stat-card stat-volume">
+            <div class="stat-value">£@(_trades.Where(t => t.Status == TradeStatus.Settled).Sum(t => t.Amount).ToString("N0"))</div>
+            <div class="stat-label">Settled Volume</div>
+        </div>
+    </div>
+
+    @if (_flash is not null)
+    {
+        <div class="flash-notification @_flashClass" @key="_flash">
+            <span class="flash-icon">⚡</span> @_flash
+        </div>
+    }
+
+    <div class="trade-table-wrapper">
+        <table class="trade-table">
+            <thead>
+                <tr>
+                    <th>External Order ID</th>
+                    <th>Distributor</th>
+                    <th>Asset Manager</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>SHA-256 Hash (seal)</th>
+                    <th>Submitted</th>
+                    <th>Settled At</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!_trades.Any())
+                {
+                    <tr><td colspan="8" class="empty-state">
+                        <div class="empty-state-inner">
+                            <div class="empty-icon">📡</div>
+                            <div>Watching the ledger...</div>
+                            <div class="empty-sub">Submit a trade to Distributor.API to see it appear here.</div>
+                        </div>
+                    </td></tr>
+                }
+                @foreach (var t in _trades.OrderByDescending(x => x.Timestamp))
+                {
+                    <tr class="trade-row @(t.InternalId == _latestId ? "trade-row-new" : "")" @key="t.InternalId">
+                        <td class="mono">@t.ExternalOrderId</td>
+                        <td>@t.Distributor</td>
+                        <td>@t.AssetManager</td>
+                        <td class="amount">£@t.Amount.ToString("N2")</td>
+                        <td>
+                            <span class="status-badge status-@t.Status.ToString().ToLower()">
+                                @Icon(t.Status) @t.Status
+                            </span>
+                        </td>
+                        <td class="hash-cell">
+                            @if (!string.IsNullOrEmpty(t.SharedHash))
+                            {
+                                <span class="hash-value" title="@t.SharedHash">@t.SharedHash[..12]…</span>
+                                <span class="hash-check" title="Seal verified">✓</span>
+                            }
+                            else { <span class="hash-pending">—</span> }
+                        </td>
+                        <td class="timestamp">@t.Timestamp.ToString("HH:mm:ss.fff")</td>
+                        <td class="timestamp">@(t.SettledAt?.ToString("HH:mm:ss.fff") ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="stream-status">
+        <span class="stream-dot"></span>
+        MongoDB Change Stream active — zero polling, pure push
+    </div>
+</div>
+
+@code {
+    private List<TradeToken> _trades  = [];
+    private Guid?            _latestId;
+    private string?          _flash;
+    private string           _flashClass = "";
+    private Timer?           _flashTimer;
+
+    protected override void OnInitialized()
+    {
+        _trades = [.. Stream.Snapshot];
+        Stream.OnTradeChanged += HandleChangeAsync;
+    }
+
+    private async Task HandleChangeAsync(TradeToken trade)
+    {
+        _latestId = trade.InternalId;
+
+        var idx = _trades.FindIndex(t => t.InternalId == trade.InternalId);
+        if (idx >= 0) _trades[idx] = trade; else _trades.Insert(0, trade);
+
+        _flash = trade.Status switch
+        {
+            TradeStatus.Pending   => $"New trade received: {trade.ExternalOrderId} — £{trade.Amount:N2}",
+            TradeStatus.Validated => $"Trade validated: {trade.ExternalOrderId}",
+            TradeStatus.Settled   => $"✅ SETTLED: {trade.ExternalOrderId} | Hash sealed",
+            TradeStatus.Rejected  => $"❌ REJECTED: {trade.ExternalOrderId} — {trade.RejectionReason}",
+            _                     => $"Update: {trade.ExternalOrderId}"
+        };
+        _flashClass = trade.Status == TradeStatus.Rejected ? "flash-reject" : "flash-success";
+
+        await InvokeAsync(StateHasChanged);
+
+        _flashTimer?.Dispose();
+        _flashTimer = new Timer(_ => { _flash = null; InvokeAsync(StateHasChanged); }, null, 4000, Timeout.Infinite);
+    }
+
+    private static string Icon(TradeStatus s) => s switch
+    {
+        TradeStatus.Pending   => "⏳",
+        TradeStatus.Validated => "🔍",
+        TradeStatus.Settled   => "✅",
+        TradeStatus.Rejected  => "❌",
+        _                     => "•"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        Stream.OnTradeChanged -= HandleChangeAsync;
+        _flashTimer?.Dispose();
+        await Task.CompletedTask;
+    }
+}
