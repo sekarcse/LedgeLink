@@ -20,7 +20,7 @@
     <ProjectReference Include="..\LedgeLink.Validator.Worker\LedgeLink.Validator.Worker.csproj" />
     <ProjectReference Include="..\LedgeLink.Settlement.Worker\LedgeLink.Settlement.Worker.csproj" />
     <ProjectReference Include="..\LedgeLink.Participant.UI\LedgeLink.Participant.UI.csproj" />
-    <ProjectReference Include="..\LedgeLink.ServiceDefaults\LedgeLink.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\LedgeLink.ServiceDefaults\LedgeLink.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

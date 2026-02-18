@@ -33,6 +33,7 @@ public sealed class ServiceBusTradePublisher : ITradePublisher, IAsyncDisposable
         
         _topologyReady = true;
         _logger.LogInformation("Service Bus sender ready for queue: {QueueName}", QueueNames.TradeRequested);
+        await Task.CompletedTask; // Placeholder for any future topology setup (e.g., creating queues/topics if needed) 
     }
 
     public async Task PublishTradeRequestedAsync(TradeToken trade, CancellationToken ct = default)
