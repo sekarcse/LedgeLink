@@ -8,14 +8,13 @@ using MongoDB.Driver;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// ── Aspire Service Defaults ──────────────────────────────────────────────────
 builder.AddServiceDefaults();
 
 // ── MongoDB ──────────────────────────────────────────────────────────────────
 builder.Services.AddSingleton<IMongoClient>(
     new MongoClient(builder.Configuration.GetConnectionString("ledgelink")));
 
-// ── Service Bus - Let Aspire inject the connection ──────────────────────────
+// ── Service Bus ──────────────────────────────────────────────────────────────
 var serviceBusConnectionString = builder.Configuration.GetConnectionString("messaging")
     ?? builder.Configuration["messaging"];
 
@@ -23,14 +22,7 @@ builder.Services.AddSingleton(new ServiceBusClient(
     serviceBusConnectionString,
     new ServiceBusClientOptions
     {
-        TransportType = ServiceBusTransportType.AmqpTcp  // ← correct for emulator
-    }));
-
-builder.Services.AddSingleton(new ServiceBusClient(
-    serviceBusConnectionString, 
-    new ServiceBusClientOptions
-    {
-        TransportType = ServiceBusTransportType.AmqpWebSockets  // required for emulator
+        TransportType = ServiceBusTransportType.AmqpTcp
     }));
 
 // ── Dependency Injection ─────────────────────────────────────────────────────

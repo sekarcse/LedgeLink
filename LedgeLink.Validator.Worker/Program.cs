@@ -17,7 +17,7 @@ builder.Services.AddSingleton(new ServiceBusClient(
     serviceBusConnectionString,
     new ServiceBusClientOptions
     {
-        TransportType = ServiceBusTransportType.AmqpTcp  // ← correct for emulator
+        TransportType = ServiceBusTransportType.AmqpTcp
     }));
 
 // ── Dependency Injection ─────────────────────────────────────────────────────
