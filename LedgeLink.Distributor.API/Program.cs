@@ -7,24 +7,16 @@ using LedgeLink.Distributor.API.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── Aspire ───────────────────────────────────────────────────────────────────
+// ── Aspire Service Defaults ──────────────────────────────────────────────────
 builder.AddServiceDefaults();
+
+// ── MongoDB ──────────────────────────────────────────────────────────────────
 builder.AddMongoDBClient("ledgelink");
 
-// ── Service Bus Configuration ─────────────────────────────────────────────────
-var serviceBusConnection = builder.Configuration["ServiceBus:ConnectionString"]
-    ?? "Endpoint=sb://localhost/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDeveloperTokenProvider=true";
-builder.Services.AddSingleton(new ServiceBusClient(serviceBusConnection));
+// ── Service Bus - Let Aspire inject the connection ──────────────────────────
+builder.AddAzureServiceBusClient("messaging");
 
-// ── Dependency Injection — Dependency Inversion in action ───────────────────
-//
-//   Application layer interfaces  →  Infrastructure layer implementations
-//
-//   TradesController
-//       └── SubmitTradeUseCase          (Application)
-//               ├── ITradeRepository   ← MongoTradeRepository      (Infrastructure)
-//               └── ITradePublisher    ← ServiceBusTradePublisher  (Infrastructure)
-//
+// ── Dependency Injection ─────────────────────────────────────────────────────
 builder.Services.AddScoped<ITradeRepository, MongoTradeRepository>();
 builder.Services.AddScoped<ITradePublisher, ServiceBusTradePublisher>();
 builder.Services.AddScoped<SubmitTradeUseCase>();
@@ -37,7 +29,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title       = "LedgeLink — Distributor API",
         Version     = "v1",
-        Description = "Trade submission endpoint for Hargreaves Lansdown. Implements idempotency, MongoDB persistence, and Azure Service Bus event publishing."
+        Description = "Trade submission endpoint for Hargreaves Lansdown."
     });
 });
 
@@ -45,7 +37,7 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// ── Middleware pipeline ──────────────────────────────────────────────────────
+// ── Middleware ───────────────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.MapDefaultEndpoints();
 app.UseSwagger();
@@ -57,7 +49,7 @@ app.UseSwaggerUI(c =>
 app.UseRouting();
 app.MapControllers();
 
-// ── Startup: ensure MongoDB indexes ─────────────────────────────────────────
+// ── Startup ──────────────────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var repo = (MongoTradeRepository)scope.ServiceProvider.GetRequiredService<ITradeRepository>();
