@@ -1,3 +1,4 @@
+using Azure.Messaging.ServiceBus;
 using LedgeLink.Validator.Worker;
 using LedgeLink.Validator.Worker.Application.Interfaces;
 using LedgeLink.Validator.Worker.Application.Services;
@@ -9,7 +10,8 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
 
 // ── Service Bus - Let Aspire inject the connection ──────────────────────────
-builder.AddAzureServiceBusClient("messaging");
+builder.Services.AddSingleton(
+    new ServiceBusClient(builder.Configuration.GetConnectionString("messaging")));
 
 // ── Dependency Injection ─────────────────────────────────────────────────────
 builder.Services.AddSingleton<IMessagePublisher, ServiceBusMessagePublisher>();

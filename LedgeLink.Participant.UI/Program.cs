@@ -2,11 +2,13 @@ using LedgeLink.Participant.UI.Application.Interfaces;
 using LedgeLink.Participant.UI.Application.Services;
 using LedgeLink.Participant.UI.Domain.Models;
 using LedgeLink.Participant.UI.Infrastructure.Persistence;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddMongoDBClient("ledgelink");
+builder.Services.AddSingleton<IMongoClient>(
+    new MongoClient(builder.Configuration.GetConnectionString("ledgelink")));
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

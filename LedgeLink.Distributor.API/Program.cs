@@ -4,6 +4,7 @@ using LedgeLink.Distributor.API.Application.Interfaces;
 using LedgeLink.Distributor.API.Application.UseCases;
 using LedgeLink.Distributor.API.Infrastructure.Messaging;
 using LedgeLink.Distributor.API.Infrastructure.Persistence;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,10 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 // ── MongoDB ──────────────────────────────────────────────────────────────────
-builder.AddMongoDBClient("ledgelink");
+builder.Services.AddSingleton<IMongoClient>(
+    new MongoClient(builder.Configuration.GetConnectionString("ledgelink")));
+
 
 // ── Service Bus - Let Aspire inject the connection ──────────────────────────
-builder.AddAzureServiceBusClient("messaging");
+builder.Services.AddSingleton(
+    new ServiceBusClient(builder.Configuration.GetConnectionString("messaging")));
 
 // ── Dependency Injection ─────────────────────────────────────────────────────
 builder.Services.AddScoped<ITradeRepository, MongoTradeRepository>();
