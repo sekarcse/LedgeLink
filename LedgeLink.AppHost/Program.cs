@@ -8,7 +8,10 @@ var mongo = builder.AddMongoDB("mongo")
 var mongoDb = mongo.AddDatabase("ledgelink");
 
 var messaging = builder.AddAzureServiceBus("messaging")
-    .RunAsEmulator();
+    .RunAsEmulator(emulator =>
+    {
+        emulator.WithConfigurationFile("./ServiceBusEmulator/config.json");
+    });
 
 // ── Application Services ─────────────────────────────────────────────────────
 
@@ -42,6 +45,7 @@ builder.AddProject<Projects.LedgeLink_Participant_UI>("participant-schroders")
     .WithEnvironment("PARTICIPANT_COLOR", "#1D4ED8")
     .WithEnvironment("PARTICIPANT_ROLE", "AssetManager")
     .WithEnvironment("PARTICIPANT_LOGO_INITIAL", "S")
+    .WithEnvironment("SERVICEBUS_SUBSCRIPTION", "schroders")
     .WaitFor(messaging);
 
 // 5. Participant.UI - Hargreaves (no MongoDB reference anymore)
@@ -51,6 +55,7 @@ builder.AddProject<Projects.LedgeLink_Participant_UI>("participant-hargreaves")
     .WithEnvironment("PARTICIPANT_COLOR", "#B91C1C")
     .WithEnvironment("PARTICIPANT_ROLE", "Distributor")
     .WithEnvironment("PARTICIPANT_LOGO_INITIAL", "H")
+    .WithEnvironment("SERVICEBUS_SUBSCRIPTION", "hargreaveslansdown")
     .WaitFor(messaging);
 
 builder.Build().Run();

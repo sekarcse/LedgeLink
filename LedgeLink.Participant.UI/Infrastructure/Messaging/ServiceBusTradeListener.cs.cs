@@ -28,7 +28,7 @@ public sealed class ServiceBusTradeListener : BackgroundService
     {
         // Each participant listens to its own subscription on the trade.settled topic
         var participantName = _config["PARTICIPANT_NAME"] ?? "Observer";
-        var subscriptionName = participantName.Replace(" ", "").ToLower(); // e.g. "schroders", "hargreaveslansdown"
+        var subscriptionName = _config["SERVICEBUS_SUBSCRIPTION"] ?? "schroders";
 
         var processor = _client.CreateProcessor(
             "trade.settled",
@@ -42,7 +42,7 @@ public sealed class ServiceBusTradeListener : BackgroundService
                 var trade = JsonSerializer.Deserialize<TradeToken>(args.Message.Body);
                 if (trade is not null)
                 {
-                    _tradeStream.UpdateTrade(trade);
+                    _ = _tradeStream.UpdateTrade(trade);
                     _logger.LogInformation("Received settled trade: {ExternalOrderId}", trade.ExternalOrderId);
                 }
                 await args.CompleteMessageAsync(args.Message);

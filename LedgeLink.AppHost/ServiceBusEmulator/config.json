@@ -1,0 +1,23 @@
+{
+  "UserConfig": {
+    "Namespaces": [
+      {
+        "Name": "ledgelink",
+        "Queues": [
+          { "Name": "trade.requested" },
+          { "Name": "trade.validated" },
+          { "Name": "trade.rejected" }
+        ],
+        "Topics": [
+          {
+            "Name": "trade.settled",
+            "Subscriptions": [
+              { "Name": "schroders" },
+              { "Name": "hargreaveslansdown" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
