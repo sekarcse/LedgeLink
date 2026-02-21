@@ -4,11 +4,15 @@ var builder = DistributedApplication.CreateBuilder(args);
 // ── Infrastructure ──────────────────────────────────────────────────────────
 
 // MongoDB: The shared ledger. All services connect to this.
+// var mongo = builder.AddMongoDB("mongo")
+//     .WithMongoExpress()
+//     .WithDataVolume("ledgelink-mongo-data");
+
 var mongo = builder.AddMongoDB("mongo")
     .WithMongoExpress()
     .WithDataVolume("ledgelink-mongo-data");
 
-var mongoDb = mongo.AddDatabase("ledgelink");
+var mongoDb = mongo.AddDatabase("ledgelink");  
 
 // Azure Service Bus Emulator - Aspire will handle this automatically
 // Just reference it, don't try to configure connection strings manually
