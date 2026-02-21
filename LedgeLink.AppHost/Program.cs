@@ -1,4 +1,4 @@
-// LedgeLink.AppHost - Orchestrates all 5 containers via .NET Aspire
+// LedgeLink.AppHost - Orchestrates all services via .NET Aspire
 var builder = DistributedApplication.CreateBuilder(args);
 
 // ── Infrastructure ──────────────────────────────────────────────────────────
@@ -8,22 +8,19 @@ var mongo = builder.AddMongoDB("mongo")
     .WithEnvironment("MONGO_INITDB_ROOT_USERNAME", "root")
     .WithEnvironment("MONGO_INITDB_ROOT_PASSWORD", "example")
     .WithMongoExpress(express =>
-    express.WithEnvironment("ME_CONFIG_MONGODB_ADMINUSERNAME", "root")
-           .WithEnvironment("ME_CONFIG_MONGODB_ADMINPASSWORD", "example")
-    ).WithDataVolume("ledgelink-mongo-data");
-
-// var mongoDb = builder.AddMongoDB("mongodb", port: 27017)
-//     .WithDataVolume()
-//     .WithEnvironment("MONGO_INITDB_ROOT_USERNAME", "root")
-//     .WithEnvironment("MONGO_INITDB_ROOT_PASSWORD", "example")
-//     .AddDatabase("ledgelink");
+        express.WithEnvironment("ME_CONFIG_MONGODB_ADMINUSERNAME", "root")
+               .WithEnvironment("ME_CONFIG_MONGODB_ADMINPASSWORD", "example")
+    )
+    .WithDataVolume("ledgelink-mongo-data");
 
 var mongoDb = mongo.AddDatabase("ledgelink");
 
+// Service Bus Emulator Connection String
+// This connection string points to the local Service Bus Emulator running in Docker
+var serviceBusConnectionString = "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true";
 
-
-// Azure Service Bus: The message bus (using Aspire resource)
-var serviceBus = builder.AddAzureServiceBus("messaging");
+// Add Service Bus as a connection string resource
+var serviceBus = builder.AddConnectionString("messaging", serviceBusConnectionString);
 
 // ── Application Services ────────────────────────────────────────────────────
 
@@ -33,14 +30,12 @@ var distributorApi = builder.AddProject<Projects.LedgeLink_Distributor_API>("dis
     .WithReference(serviceBus)
     .WithEnvironment("DISTRIBUTOR_NAME", "Hargreaves Lansdown")
     .WithHttpEndpoint(port: 5100, name: "http")
-    .WaitFor(mongoDb)
-    .WaitFor(serviceBus);
+    .WaitFor(mongoDb);
 
 // 2. Validator.Worker - Business rule validation
 builder.AddProject<Projects.LedgeLink_Validator_Worker>("validator-worker")
     .WithReference(serviceBus)
     .WithEnvironment("WORKER_NAME", "Validator")
-    .WaitFor(serviceBus)
     .WaitFor(distributorApi);
 
 // 3. Settlement.Worker - Cryptographic seal + ledger write
@@ -48,8 +43,7 @@ builder.AddProject<Projects.LedgeLink_Settlement_Worker>("settlement-worker")
     .WithReference(mongoDb)
     .WithReference(serviceBus)
     .WithEnvironment("WORKER_NAME", "Settlement")
-    .WaitFor(mongoDb)
-    .WaitFor(serviceBus);
+    .WaitFor(mongoDb);
 
 // 4. Participant.UI - Schroders view (Observer 1)
 builder.AddProject<Projects.LedgeLink_Participant_UI>("participant-schroders")

@@ -1,44 +1,45 @@
 version: '3.8'
 
 services:
-  # MongoDB for persistence
+  # MongoDB for trade storage
   mongodb:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: ledgelink-mongodb
     ports:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: mongosh -u root -p password --eval 'db.adminCommand("ping")' --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - ledgelink-network
 
   # Azure Service Bus Emulator
-  service-bus-emulator:
-    image: mcr.microsoft.com/azure-messaging/service-bus-emulator:latest
-    container_name: ledgelink-service-bus
+  servicebus:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    container_name: ledgelink-servicebus
     ports:
-      - "5672:5672"
-      - "9600:9600"
+      - "5672:5672"   # AMQP port
     environment:
-      - ACCEPT_EULA=Y
-    volumes:
-      - service-bus_data:/data
+      ACCEPT_EULA: Y
+      SERVICEBUS_EMULATOR_LOGGING__LOGLEVEL__DEFAULT: Information
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9600/status || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - ledgelink-network
 
 volumes:
   mongodb_data:
-  service-bus_data:
 
 networks:
-  default:
-    name: ledgelink-network
+  ledgelink-network:
+    driver: bridge
