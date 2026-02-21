@@ -33,7 +33,7 @@ dotnet restore LedgeLink.sln
 dotnet run --project LedgeLink.AppHost
 ```
 
-That's it. Aspire will pull MongoDB and RabbitMQ Docker images automatically.
+That's it. Aspire will pull MongoDB and Azure Service Bus Emulator Docker images automatically.
 
 ---
 
@@ -45,7 +45,7 @@ That's it. Aspire will pull MongoDB and RabbitMQ Docker images automatically.
 | http://localhost:5100 | **Distributor.API** (Swagger UI at root) |
 | http://localhost:5200 | **Participant UI — Schroders** (blue theme) |
 | http://localhost:5201 | **Participant UI — Hargreaves** (red theme) |
-| http://localhost:15672 | **RabbitMQ Management** (guest / guest) |
+| http://localhost:9600 | **Azure Service Bus Emulator Management** |
 | http://localhost:8081 | **Mongo Express** (MongoDB UI) |
 
 ---
@@ -92,16 +92,16 @@ Submit a trade with `amount: -100`. The Validator.Worker rejects it and you will
       ▼ POST /api/trades
 ┌─────────────────────┐
 │  Distributor.API    │  ── Writes Pending to MongoDB
-│  (Hargreaves HL)    │  ── Publishes to RabbitMQ: trade.requested
+│  (Hargreaves HL)    │  ── Publishes to Service Bus: trade.requested
 └─────────────────────┘
       │
-      ▼ RabbitMQ: trade.requested
+      ▼ Service Bus: trade.requested
 ┌─────────────────────┐
 │  Validator.Worker   │  ── Checks business rules
 │                     │  ── Publishes: trade.validated / trade.rejected
 └─────────────────────┘
       │
-      ▼ RabbitMQ: trade.validated
+      ▼ Service Bus: trade.validated
 ┌─────────────────────┐
 │  Settlement.Worker  │  ── Computes SHA-256 hash
 │                     │  ── Updates MongoDB: Status=Settled, SharedHash
@@ -166,8 +166,8 @@ aspirate generate --project-path LedgeLink.AppHost
 kubectl apply -f ./aspirate-output/
 ```
 
-Kafka swap: Replace `AddRabbitMQ()` with `AddKafka()` in AppHost and update the worker 
-packages from `Aspire.RabbitMQ.Client` to `Confluent.Kafka`.
+Kafka swap: Replace `AddServiceBus()` with `AddKafka()` in AppHost and update the worker 
+packages from `Azure.Messaging.ServiceBus` to `Confluent.Kafka`.
 
 ---
 
@@ -178,5 +178,5 @@ packages from `Aspire.RabbitMQ.Client` to `Confluent.Kafka`.
 | Docker not running | Start Docker Desktop before running AppHost |
 | Port already in use | Change ports in AppHost Program.cs |
 | MongoDB connection fail | Wait 10-15s for Docker container to initialise |
-| RabbitMQ not ready | Workers auto-retry — give it 30 seconds |
+| Service Bus Emulator not ready | Workers auto-retry — give it 30 seconds |
 | Aspire workload missing | `dotnet workload install aspire` |

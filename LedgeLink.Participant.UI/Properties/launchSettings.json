@@ -1,0 +1,18 @@
+{
+  "profiles": {
+    "Schroders": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5200",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://localhost:5200"
+      }
+    },
+    "Hargreaves": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5201",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://localhost:5201"
+      }
+    }
+  }
+}

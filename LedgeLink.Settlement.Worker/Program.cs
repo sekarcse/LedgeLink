@@ -16,8 +16,15 @@ builder.Services.AddSingleton<IMongoClient>(
     new MongoClient(builder.Configuration.GetConnectionString("ledgelink")));
 
 // ── Service Bus - Let Aspire inject the connection ──────────────────────────
-builder.Services.AddSingleton(
-    new ServiceBusClient(builder.Configuration.GetConnectionString("messaging")));
+var serviceBusConnectionString = builder.Configuration.GetConnectionString("messaging") 
+    ?? builder.Configuration["messaging"];
+
+builder.Services.AddSingleton(new ServiceBusClient(
+    serviceBusConnectionString, 
+    new ServiceBusClientOptions
+    {
+        TransportType = ServiceBusTransportType.AmqpWebSockets  // required for emulator
+    }));
 
 // ── Dependency Injection ─────────────────────────────────────────────────────
 builder.Services.AddSingleton<ITradeSettlementRepository, MongoTradeSettlementRepository>();

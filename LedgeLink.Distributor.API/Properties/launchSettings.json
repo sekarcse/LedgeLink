@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "LedgeLink.Distributor.API": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5100",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "http://localhost:5100"
+      }
+    }
+  }
+}
