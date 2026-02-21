@@ -2,8 +2,8 @@ using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using LedgeLink.Shared.Application.Interfaces;
 using LedgeLink.Shared.Domain.Models;
+using LedgeLink.Validator.Worker.Application.Interfaces;
 using LedgeLink.Validator.Worker.Application.Services;
-using LedgeLink.Validator.Worker.Infrastructure.Messaging;
 
 namespace LedgeLink.Validator.Worker;
 
@@ -22,14 +22,14 @@ public sealed class ValidatorWorker : BackgroundService
 {
     private readonly ServiceBusClient _serviceBusClient;
     private readonly TradeValidationService _validationService;
-    private readonly ServiceBusMessagePublisher _publisher;
+    private readonly IMessagePublisher  _publisher;
     private readonly ILogger<ValidatorWorker> _logger;
     private ServiceBusProcessor? _processor;
 
     public ValidatorWorker(
         ServiceBusClient serviceBusClient,
         TradeValidationService validationService,
-        ServiceBusMessagePublisher publisher,
+        IMessagePublisher publisher,
         ILogger<ValidatorWorker> logger)
     {
         _serviceBusClient   = serviceBusClient;

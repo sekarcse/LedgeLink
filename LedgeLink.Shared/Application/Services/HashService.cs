@@ -17,9 +17,11 @@ public static class HashService
 {
     public static string ComputeHash(TradeToken trade)
     {
-        var raw  = $"{trade.ExternalOrderId}{trade.Amount:F2}{trade.Timestamp:O}";
+        // Truncate to seconds to avoid precision mismatch between compute and store
+        var timestamp = trade.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ");
+        var raw = $"{trade.ExternalOrderId}{trade.Amount:F2}{timestamp}";
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
-        return Convert.ToHexString(hash); // uppercase hex e.g. "A1B2C3D4..."
+        return Convert.ToHexString(hash);
     }
 
     public static bool VerifyHash(TradeToken trade)

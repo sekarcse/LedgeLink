@@ -46,6 +46,7 @@ builder.AddProject<Projects.LedgeLink_Participant_UI>("participant-schroders")
     .WithEnvironment("PARTICIPANT_ROLE", "AssetManager")
     .WithEnvironment("PARTICIPANT_LOGO_INITIAL", "S")
     .WithEnvironment("SERVICEBUS_SUBSCRIPTION", "schroders")
+    .WithHttpEndpoint(port: 5201, name: "schroders-http") 
     .WaitFor(messaging);
 
 // 5. Participant.UI - Hargreaves (no MongoDB reference anymore)
@@ -56,6 +57,7 @@ builder.AddProject<Projects.LedgeLink_Participant_UI>("participant-hargreaves")
     .WithEnvironment("PARTICIPANT_ROLE", "Distributor")
     .WithEnvironment("PARTICIPANT_LOGO_INITIAL", "H")
     .WithEnvironment("SERVICEBUS_SUBSCRIPTION", "hargreaveslansdown")
+    .WithHttpEndpoint(port: 5200, name: "hargreaves-http") 
     .WaitFor(messaging);
 
 builder.Build().Run();

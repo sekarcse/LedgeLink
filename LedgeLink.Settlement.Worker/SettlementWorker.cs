@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
+using LedgeLink.Settlement.Worker.Application.Interfaces;
 using LedgeLink.Settlement.Worker.Application.Services;
-using LedgeLink.Settlement.Worker.Infrastructure.Messaging;
 using LedgeLink.Shared.Application.Interfaces;
 using LedgeLink.Shared.Domain.Models;
 
@@ -22,14 +22,14 @@ public sealed class SettlementWorker : BackgroundService
 {
     private readonly ServiceBusClient _serviceBusClient;
     private readonly SettleTradeService _settlementService;
-    private readonly ServiceBusSettlementPublisher _publisher;
+    private readonly ISettlementPublisher _publisher;
     private readonly ILogger<SettlementWorker> _logger;
     private ServiceBusProcessor? _processor;
 
     public SettlementWorker(
         ServiceBusClient serviceBusClient,
         SettleTradeService settlementService,
-        ServiceBusSettlementPublisher publisher,
+        ISettlementPublisher publisher,
         ILogger<SettlementWorker> logger)
     {
         _serviceBusClient   = serviceBusClient;

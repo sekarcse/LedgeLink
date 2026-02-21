@@ -25,7 +25,7 @@ public sealed class TradesController : ControllerBase
     public TradesController(SubmitTradeUseCase submitTrade, ILogger<TradesController> logger)
     {
         _submitTrade = submitTrade;
-        _logger      = logger;
+        _logger = logger;
     }
 
     /// <summary>
@@ -50,14 +50,14 @@ public sealed class TradesController : ControllerBase
 
         var response = new SubmitTradeResponse
         {
-            TradeId         = result.Trade.InternalId,
+            TradeId = result.Trade.InternalId,
             ExternalOrderId = result.Trade.ExternalOrderId,
-            Status          = result.Trade.Status.ToString(),
-            Timestamp       = result.Trade.Timestamp,
-            Message         = result.IsNew
+            Status = result.Trade.Status.ToString(),
+            Timestamp = result.Trade.Timestamp,
+            Message = result.IsNew
                                 ? "Trade accepted and queued for settlement."
                                 : "Duplicate — returning original trade record.",
-            IsDuplicate     = result.IsDuplicate
+            IsDuplicate = result.IsDuplicate
         };
 
         return result.IsNew
@@ -72,7 +72,7 @@ public sealed class TradesController : ControllerBase
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         // Lightweight — direct repo read for GET is fine (no use case needed)
-        var repo  = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.ITradeRepository>();
+        var repo = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.ITradeRepository>();
         var trade = await repo.FindByIdAsync(id, ct);
         return trade is null ? NotFound() : Ok(trade);
     }
@@ -82,8 +82,37 @@ public sealed class TradesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(CancellationToken ct)
     {
-        var repo   = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.ITradeRepository>();
+        var repo = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.ITradeRepository>();
         var trades = await repo.GetRecentAsync(50, ct);
         return Ok(trades);
+    }
+
+    /// <summary>Verify the cryptographic integrity of a settled trade.</summary>
+    [HttpGet("{externalOrderId}/verify")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Verify(string externalOrderId, CancellationToken ct)
+    {
+        var repo = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.ITradeRepository>();
+        var trade = await repo.FindByExternalOrderIdAsync(externalOrderId, ct);
+
+        if (trade is null)
+            return NotFound(new { error = $"Trade '{externalOrderId}' not found." });
+
+        var isValid = LedgeLink.Shared.Application.Services.HashService.VerifyHash(trade);
+
+        return Ok(new
+        {
+            externalOrderId = trade.ExternalOrderId,
+            status = trade.Status.ToString(),
+            amount = trade.Amount,
+            timestamp = trade.Timestamp,
+            storedHash = trade.SharedHash,
+            computedHash = LedgeLink.Shared.Application.Services.HashService.ComputeHash(trade),
+            isValid = isValid,
+            message = isValid
+                                ? "✅ Hash verified — record is untampered."
+                                : "❌ Hash mismatch — record has been tampered with!"
+        });
     }
 }
