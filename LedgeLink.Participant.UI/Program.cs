@@ -1,24 +1,29 @@
-using LedgeLink.Participant.UI.Application.Interfaces;
+using Azure.Messaging.ServiceBus;
 using LedgeLink.Participant.UI.Application.Services;
 using LedgeLink.Participant.UI.Domain.Models;
-using LedgeLink.Participant.UI.Infrastructure.Persistence;
-using MongoDB.Driver;
+using LedgeLink.Participant.UI.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-builder.Services.AddSingleton<IMongoClient>(
-    new MongoClient(builder.Configuration.GetConnectionString("ledgelink")));
+
+// ── Service Bus ──────────────────────────────────────────────────────────────
+var serviceBusConnectionString = builder.Configuration.GetConnectionString("messaging")
+    ?? builder.Configuration["messaging"];
+
+builder.Services.AddSingleton(new ServiceBusClient(
+    serviceBusConnectionString,
+    new ServiceBusClientOptions
+    {
+        TransportType = ServiceBusTransportType.AmqpTcp  // ← correct for emulator
+    }));
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// ── Dependency Inversion ─────────────────────────────────────────────────────
-//   Dashboard.razor
-//       └── TradeStreamService            (Application)
-//               └── ITradeStreamRepository ← MongoTradeStreamRepository (Infrastructure)
-builder.Services.AddSingleton<ITradeStreamRepository, MongoTradeStreamRepository>();
+// ── Dependency Injection ─────────────────────────────────────────────────────
 builder.Services.AddSingleton<TradeStreamService>();
+builder.Services.AddHostedService<ServiceBusTradeListener>();
 
 // ── Multi-tenant identity from environment variables ─────────────────────────
 builder.Services.AddSingleton(sp =>
@@ -42,9 +47,5 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<LedgeLink.Participant.UI.Components.App>()
     .AddInteractiveServerRenderMode();
-
-// Start the Change Stream background loop
-var stream = app.Services.GetRequiredService<TradeStreamService>();
-_ = stream.StartAsync(app.Lifetime.ApplicationStopping);
 
 app.Run();

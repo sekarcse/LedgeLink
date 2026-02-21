@@ -8,12 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LedgeLink.ServiceDefaults\LedgeLink.ServiceDefaults.csproj" />
     <ProjectReference Include="..\LedgeLink.Shared\LedgeLink.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\Interfaces\" />
+    <Folder Include="Infrastructure\Messaging\" />
+    <Folder Include="Infrastructure\Persistence\" />
   </ItemGroup>
 
 </Project>

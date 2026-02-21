@@ -16,8 +16,15 @@ builder.Services.AddSingleton<IMongoClient>(
     new MongoClient(builder.Configuration.GetConnectionString("ledgelink")));
 
 // ── Service Bus - Let Aspire inject the connection ──────────────────────────
-var serviceBusConnectionString = builder.Configuration.GetConnectionString("messaging") 
+var serviceBusConnectionString = builder.Configuration.GetConnectionString("messaging")
     ?? builder.Configuration["messaging"];
+
+builder.Services.AddSingleton(new ServiceBusClient(
+    serviceBusConnectionString,
+    new ServiceBusClientOptions
+    {
+        TransportType = ServiceBusTransportType.AmqpTcp  // ← correct for emulator
+    }));
 
 builder.Services.AddSingleton(new ServiceBusClient(
     serviceBusConnectionString, 
