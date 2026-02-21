@@ -2,7 +2,7 @@
   "UserConfig": {
     "Namespaces": [
       {
-        "Name": "ledgelink",
+        "Name": "sbemulatorns",
         "Queues": [
           { "Name": "trade.requested" },
           { "Name": "trade.validated" },
@@ -18,6 +18,9 @@
           }
         ]
       }
-    ]
+    ],
+    "Logging": {
+      "Type": "console"
+    }
   }
 }
