@@ -218,17 +218,173 @@ If someone modifies `Amount` directly in MongoDB after settlement, `VerifyHash()
 
 ---
 
-## Phase 2: Pi4 K8s Deployment (Next Steps)
+## Phase 2: Blockchain Hash Anchoring + Pi4 K8s Deployment
 
+### Overview
+
+Phase 2 extends LedgeLink with two major additions:
+
+1. **Blockchain hash anchoring** — after settlement, the SHA-256 hash is published to Ethereum Sepolia testnet as an immutable audit trail. No one can dispute the settled hash because it lives on-chain.
+2. **Pi4 Kubernetes deployment** — the entire stack moves from local Aspire orchestration to a real multi-node K8s cluster running on Raspberry Pi 4 hardware.
+
+---
+
+### Phase 2 Architecture
+
+```
+[Swagger / curl]
+      │
+      ▼ POST /api/trades
+┌─────────────────────┐
+│  Distributor.API    │  ── Writes Pending to MongoDB
+│  (Hargreaves HL)    │  ── Publishes to Kafka: trade.requested
+└─────────────────────┘
+      │
+      ▼ Kafka: trade.requested
+┌─────────────────────┐
+│  Validator.Worker   │  ── Checks business rules
+│                     │  ── Publishes: trade.validated / trade.rejected
+└─────────────────────┘
+      │
+      ▼ Kafka: trade.validated
+┌─────────────────────┐
+│  Settlement.Worker  │  ── Computes SHA-256 hash
+│                     │  ── Updates MongoDB: Status=Settled
+│                     │  ── Anchors hash to Ethereum Sepolia  ← NEW
+│                     │  ── Publishes to topic: trade.settled
+└─────────────────────┘
+      │
+      ├──────────────────────────────────────┐
+      ▼                                      ▼
+┌────────────┐   ┌────────────┐    ┌─────────────────────┐
+│ UI:        │   │ UI:        │    │  Ethereum Sepolia   │
+│ Schroders  │   │ Hargreaves │    │  TX Hash on-chain   │
+│            │   │            │    │  (immutable truth)  │
+└────────────┘   └────────────┘    └─────────────────────┘
+```
+
+---
+
+### Blockchain Hash Anchoring
+
+After settlement, `Settlement.Worker` publishes the SHA-256 hash to Ethereum Sepolia via a simple smart contract. This gives every settled trade an **immutable on-chain receipt** that neither party can alter.
+
+**What gets anchored:**
+```
+keccak256(externalOrderId + sha256Hash + timestamp)
+→ stored on Sepolia → TX hash returned
+→ stored in MongoDB as txHash
+→ shown in both UIs with Etherscan link
+```
+
+**What you need:**
+- Infura or Alchemy free Sepolia RPC endpoint
+- A funded Sepolia wallet (free ETH from faucet.sepolia.dev)
+- Nethereum NuGet package in Settlement.Worker
+
+**Verify a trade on-chain:**
+```
+GET /api/trades/{externalOrderId}/verify
+→ returns: isValid, storedHash, txHash, etherscanUrl
+```
+
+Any post-settlement tampering in MongoDB will cause the recomputed hash to differ from the on-chain anchored hash — **cryptographic proof of fraud**.
+
+---
+
+### Kafka Swap (Service Bus → Kafka)
+
+On Pi4, replace Azure Service Bus with Kafka for lower latency and no cloud dependency:
+
+```csharp
+// AppHost/Program.cs — replace
+var messaging = builder.AddAzureServiceBus("messaging").RunAsEmulator();
+
+// with
+var messaging = builder.AddKafka("messaging");
+```
+
+Update worker packages:
+```xml
+<!-- Remove -->
+<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.4" />
+
+<!-- Add -->
+<PackageReference Include="Confluent.Kafka" Version="2.x.x" />
+```
+
+---
+
+### Pi4 K8s Deployment
+
+**Prerequisites on Pi4 cluster:**
+```bash
+# Each Pi4 node needs
+curl -sfL https://get.k3s.io | sh -   # lightweight K8s for ARM
+docker --version                        # Docker must be running
+```
+
+**Generate K8s manifests from Aspire:**
 ```bash
 # Install aspirate
 dotnet tool install -g aspirate
 
-# Generate K8s manifests from AppHost
+# Generate manifests
 aspirate generate --project-path LedgeLink.AppHost
 
-# Deploy to Pi4 cluster
-kubectl apply -f ./aspirate-output/
+# Review output
+ls ./aspirate-output/
 ```
 
-Kafka swap: Replace `AddAzureServiceBus()` with `AddKafka()` in AppHost and update worker packages to `Confluent.Kafka`.
+**Deploy to Pi4 cluster:**
+```bash
+# Set your Pi4 kubeconfig
+export KUBECONFIG=~/.kube/pi4-config
+
+# Deploy everything
+kubectl apply -f ./aspirate-output/
+
+# Watch rollout
+kubectl get pods -w -n ledgelink
+```
+
+**Expected pods:**
+```
+NAME                          READY   STATUS
+distributor-api-xxx           1/1     Running
+validator-worker-xxx          1/1     Running
+settlement-worker-xxx         1/1     Running
+participant-schroders-xxx     1/1     Running
+participant-hargreaves-xxx    1/1     Running
+mongo-xxx                     1/1     Running
+kafka-xxx                     1/1     Running
+```
+
+**ARM64 image builds** (Pi4 is ARM architecture):
+```bash
+# Build multi-arch images
+docker buildx build --platform linux/arm64 \
+  -t ledgelink/distributor-api:latest \
+  ./LedgeLink.Distributor.API
+
+# Repeat for each service
+```
+
+---
+
+### Phase 2 Checklist
+
+**Blockchain anchoring:**
+- [ ] Deploy simple hash-anchor smart contract to Sepolia
+- [ ] Add Nethereum to Settlement.Worker
+- [ ] Add `txHash` field to `TradeToken`
+- [ ] Update verify endpoint to check on-chain hash
+- [ ] Show Etherscan link in both Participant UIs
+
+**Pi4 K8s:**
+- [ ] Set up K3s cluster on Pi4 nodes
+- [ ] Swap Service Bus → Kafka in AppHost
+- [ ] Build ARM64 Docker images
+- [ ] Generate and apply K8s manifests via aspirate
+- [ ] Configure persistent volumes for MongoDB on Pi4
+- [ ] Set up ingress for UI endpoints
