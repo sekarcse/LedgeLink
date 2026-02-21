@@ -17,9 +17,12 @@ public static class HashService
 {
     public static string ComputeHash(TradeToken trade)
     {
-        // Truncate to seconds to avoid precision mismatch between compute and store
-        var timestamp = trade.Timestamp.ToString("yyyy-MM-ddTHH:mm:ssZ");
-        var raw = $"{trade.ExternalOrderId}{trade.Amount:F2}{timestamp}";
+        // Truncate to milliseconds to match MongoDB's storage precision
+        var timestamp = new DateTime(
+            trade.Timestamp.Ticks / TimeSpan.TicksPerMillisecond * TimeSpan.TicksPerMillisecond,
+            DateTimeKind.Utc);
+
+        var raw = $"{trade.ExternalOrderId}{trade.Amount:F2}{timestamp:O}";
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash);
     }
