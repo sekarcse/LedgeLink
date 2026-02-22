@@ -118,7 +118,7 @@ While this Proof-of-Concept uses a public blockchain for anchoring, "real-world"
     *   **Tamper-proof storage** using Hardware Security Modules (HSMs).
     *   **High Performance** compared to public blockchain settlement times.
     *   **Privacy Control**: Access is restricted and managed, unlike public testnets.
-3.  **Governance**: A production ledger requires a clear governance model for who can anchor and verify hashes, which can be implemented via ACL or a private/permissioned blockchain (e.g., Quorum).
+3.  **Governance**: A production ledger requires a clear governance model for who can anchor and verify hashes, which can be implemented via Azure Confidential Ledger or a private/permissioned blockchain (e.g., Quorum).
 
 ---
 
