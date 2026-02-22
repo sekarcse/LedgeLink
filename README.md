@@ -109,6 +109,19 @@ LedgeLink/
 
 ---
 
+## Production Security & Privacy Considerations
+
+While this Proof-of-Concept uses a public blockchain for anchoring, "real-world" financial deployments should consider the following:
+
+1.  **Secret Management**: In this PoC, Ethereum private keys are passed via environment variables. For production, **Azure Key Vault** or **AWS Secrets Manager** should be used. Better yet, use **Managed Identities** to eliminate the need for long-lived credentials entirely.
+2.  **Privacy & Data Sovereignty**: Even though only hashes are anchored, transaction metadata on public blockchains can be sensitive. For enterprise trade data, **Azure Confidential Ledger (ACL)** is the recommended alternative. It offers:
+    *   **Tamper-proof storage** using Hardware Security Modules (HSMs).
+    *   **High Performance** compared to public blockchain settlement times.
+    *   **Privacy Control**: Access is restricted and managed, unlike public testnets.
+3.  **Governance**: A production ledger requires a clear governance model for who can anchor and verify hashes, which can be implemented via ACL or a private/permissioned blockchain (e.g., Quorum).
+
+---
+
 ## Phase 2: Pi4 K8s Deployment (Future)
 
 The next phase moves the stack from local Aspire orchestration to a real multi-node K8s cluster running on Raspberry Pi 4 hardware.
