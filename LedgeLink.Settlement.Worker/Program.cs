@@ -2,6 +2,7 @@ using Azure.Messaging.ServiceBus;
 using LedgeLink.Settlement.Worker;
 using LedgeLink.Settlement.Worker.Application.Interfaces;
 using LedgeLink.Settlement.Worker.Application.Services;
+using LedgeLink.Settlement.Worker.Infrastructure.Blockchain;
 using LedgeLink.Settlement.Worker.Infrastructure.Messaging;
 using LedgeLink.Settlement.Worker.Infrastructure.Persistence;
 using MongoDB.Driver;
@@ -28,6 +29,7 @@ builder.Services.AddSingleton(new ServiceBusClient(
 // ── Dependency Injection ─────────────────────────────────────────────────────
 builder.Services.AddSingleton<ITradeSettlementRepository, MongoTradeSettlementRepository>();
 builder.Services.AddSingleton<ISettlementPublisher, ServiceBusSettlementPublisher>();
+builder.Services.AddSingleton<IBlockchainService, NethereumBlockchainService>();
 builder.Services.AddSingleton<SettleTradeService>();
 builder.Services.AddHostedService<SettlementWorker>();
 

@@ -5,6 +5,7 @@
 @using LedgeLink.Participant.UI.Domain.Models
 @inject TradeStreamService  Stream
 @inject ParticipantContext  Participant
+@inject IConfiguration      Configuration
 @implements IAsyncDisposable
 @rendermode Microsoft.AspNetCore.Components.Web.RenderMode.InteractiveServer
 
@@ -52,6 +53,7 @@
                     <th>Amount</th>
                     <th>Status</th>
                     <th>SHA-256 Hash (seal)</th>
+                    <th>Blockchain</th>
                     <th>Submitted</th>
                     <th>Settled At</th>
                 </tr>
@@ -84,6 +86,16 @@
                             {
                                 <span class="hash-value" title="@t.SharedHash">@t.SharedHash[..12]…</span>
                                 <span class="hash-check" title="Seal verified">✓</span>
+                            }
+                            else { <span class="hash-pending">—</span> }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(t.BlockchainTxHash))
+                            {
+                                var explorerBase = Configuration["Ethereum:BlockExplorerUrl"] ?? "https://sepolia.etherscan.io/tx/";
+                                <a href="@($"{explorerBase.TrimEnd('/')}/{t.BlockchainTxHash}")" target="_blank" class="etherscan-link" title="View on Etherscan">
+                                    ⛓️ View Tx
+                                </a>
                             }
                             else { <span class="hash-pending">—</span> }
                         </td>

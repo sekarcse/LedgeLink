@@ -19,15 +19,18 @@ public sealed class SettleTradeService
 {
     private readonly ITradeSettlementRepository _repository;
     private readonly ISettlementPublisher       _publisher;
+    private readonly IBlockchainService         _blockchain;
     private readonly ILogger<SettleTradeService> _logger;
 
     public SettleTradeService(
         ITradeSettlementRepository repository,
         ISettlementPublisher publisher,
+        IBlockchainService blockchain,
         ILogger<SettleTradeService> logger)
     {
         _repository = repository;
         _publisher  = publisher;
+        _blockchain = blockchain;
         _logger     = logger;
     }
 
@@ -45,8 +48,19 @@ public sealed class SettleTradeService
             "Hash computed for {ExternalOrderId}: {HashPreview}...",
             trade.ExternalOrderId, hash[..16]);
 
-        // ── 2. Persist to ledger ─────────────────────────────────────────────
-        var updated = await _repository.MarkSettledAsync(trade.InternalId, hash, settledAt, ct);
+        // ── 2. Anchor hash to blockchain ─────────────────────────────────────
+        string? txHash = null;
+        try
+        {
+            txHash = await _blockchain.AnchorHashAsync(trade.ExternalOrderId, hash, trade.Timestamp, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Blockchain anchoring failed for {ExternalOrderId}. Proceeding with MongoDB write anyway.", trade.ExternalOrderId);
+        }
+
+        // ── 3. Persist to ledger ─────────────────────────────────────────────
+        var updated = await _repository.MarkSettledAsync(trade.InternalId, hash, settledAt, txHash, ct);
 
         if (!updated)
         {
@@ -59,10 +73,11 @@ public sealed class SettleTradeService
             "Trade SETTLED in ledger: {ExternalOrderId} | SettledAt: {SettledAt}",
             trade.ExternalOrderId, settledAt);
 
-        // ── 3. Publish confirmation event ────────────────────────────────────
-        trade.Status     = TradeStatus.Settled;
-        trade.SharedHash = hash;
-        trade.SettledAt  = settledAt;
+        // ── 4. Publish confirmation event ────────────────────────────────────
+        trade.Status           = TradeStatus.Settled;
+        trade.SharedHash       = hash;
+        trade.SettledAt        = settledAt;
+        trade.BlockchainTxHash = txHash;
 
         await _publisher.PublishTradeSettledAsync(trade, ct);
     }

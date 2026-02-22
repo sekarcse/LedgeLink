@@ -59,4 +59,8 @@ public class TradeToken
     /// <summary>Set by Validator.Worker when a business rule is violated.</summary>
     [BsonElement("rejectionReason")]
     public string? RejectionReason { get; set; }
+
+    /// <summary>Ethereum transaction hash — set by Settlement.Worker after anchoring.</summary>
+    [BsonElement("txHash")]
+    public string? BlockchainTxHash { get; set; }
 }
