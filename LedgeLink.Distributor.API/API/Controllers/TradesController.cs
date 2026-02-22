@@ -20,11 +20,13 @@ namespace LedgeLink.Distributor.API.API.Controllers;
 public sealed class TradesController : ControllerBase
 {
     private readonly SubmitTradeUseCase _submitTrade;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<TradesController> _logger;
 
-    public TradesController(SubmitTradeUseCase submitTrade, ILogger<TradesController> logger)
+    public TradesController(SubmitTradeUseCase submitTrade, IConfiguration configuration, ILogger<TradesController> logger)
     {
         _submitTrade = submitTrade;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -94,12 +96,22 @@ public sealed class TradesController : ControllerBase
     public async Task<IActionResult> Verify(string externalOrderId, CancellationToken ct)
     {
         var repo = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.ITradeRepository>();
+        var blockchain = HttpContext.RequestServices.GetRequiredService<Application.Interfaces.IBlockchainService>();
+
         var trade = await repo.FindByExternalOrderIdAsync(externalOrderId, ct);
 
         if (trade is null)
             return NotFound(new { error = $"Trade '{externalOrderId}' not found." });
 
-        var isValid = LedgeLink.Shared.Application.Services.HashService.VerifyHash(trade);
+        var isLocalValid = LedgeLink.Shared.Application.Services.HashService.VerifyHash(trade);
+        var (isAnchored, anchoredHash) = await blockchain.GetAnchoredHashAsync(externalOrderId, ct);
+
+        var isOnChainValid = isAnchored && string.Equals(anchoredHash, trade.SharedHash, StringComparison.OrdinalIgnoreCase);
+
+        var explorerBase = _configuration["Ethereum:BlockExplorerUrl"] ?? "https://sepolia.etherscan.io/tx/";
+        var etherscanUrl = !string.IsNullOrEmpty(trade.BlockchainTxHash)
+            ? $"{explorerBase.TrimEnd('/')}/{trade.BlockchainTxHash}"
+            : null;
 
         return Ok(new
         {
@@ -109,10 +121,16 @@ public sealed class TradesController : ControllerBase
             timestamp = trade.Timestamp,
             storedHash = trade.SharedHash,
             computedHash = LedgeLink.Shared.Application.Services.HashService.ComputeHash(trade),
-            isValid = isValid,
-            message = isValid
-                                ? "✅ Hash verified — record is untampered."
-                                : "❌ Hash mismatch — record has been tampered with!"
+            txHash = trade.BlockchainTxHash,
+            etherscanUrl = etherscanUrl,
+            isLocalValid = isLocalValid,
+            isOnChainValid = isOnChainValid,
+            isAnchored = isAnchored,
+            message = (isLocalValid && isOnChainValid)
+                                ? "✅ DOUBLE VERIFIED — Ledger and Blockchain both match."
+                                : !isLocalValid
+                                    ? "❌ TAMPERED — Local hash mismatch!"
+                                    : "⚠️ BLOCKCHAIN MISMATCH — Local OK, but on-chain differs!"
         });
     }
 }

@@ -21,13 +21,14 @@ public sealed class MongoTradeSettlementRepository : ITradeSettlementRepository
         _collection = db.GetCollection<TradeToken>("trades");
     }
 
-    public async Task<bool> MarkSettledAsync(Guid internalId, string hash, DateTime settledAt, CancellationToken ct = default)
+    public async Task<bool> MarkSettledAsync(Guid internalId, string hash, DateTime settledAt, string? txHash = null, CancellationToken ct = default)
     {
         var filter = Builders<TradeToken>.Filter.Eq(t => t.InternalId, internalId);
         var update  = Builders<TradeToken>.Update
             .Set(t => t.Status,     TradeStatus.Settled)
             .Set(t => t.SharedHash, hash)
             .Set(t => t.SettledAt,  settledAt)
+            .Set(t => t.BlockchainTxHash, txHash)
             .Inc(t => t.Version,    1);
 
         var result = await _collection.UpdateOneAsync(filter, update, cancellationToken: ct);
