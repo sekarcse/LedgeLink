@@ -78,7 +78,26 @@ dotnet build LedgeLink.sln
 dotnet run --project LedgeLink.AppHost
 ```
 
-> **Note:** For blockchain anchoring, ensure `Ethereum__RpcUrl`, `Ethereum__PrivateKey`, and `Ethereum__ContractAddress` are configured in your environment.
+> **Note:** By default, the app runs in **Simulation Mode** (generating fake hashes) if no blockchain credentials are found. See the [Live Blockchain Setup](#live-blockchain-setup) section to use a real testnet.
+
+---
+
+## Live Blockchain Setup (Optional)
+
+To move from simulation to the real Ethereum Sepolia Testnet:
+
+1.  **Get an RPC URL**: Sign up at [Infura](https://infura.io) or [Alchemy](https://alchemy.com) and copy your Sepolia URL.
+2.  **Get a Private Key**: Export a private key from MetaMask (ensure it has some Sepolia ETH from a faucet).
+3.  **Deploy the Contract**:
+    *   Open `contracts/HashAnchor.sol` in [Remix IDE](https://remix.ethereum.org).
+    *   Deploy to Sepolia and copy the **Contract Address**.
+4.  **Configure LedgeLink**:
+    Run these commands in the root directory:
+    ```bash
+    dotnet user-secrets set "Ethereum:RpcUrl" "YOUR_RPC_URL" --project LedgeLink.AppHost
+    dotnet user-secrets set "Ethereum:PrivateKey" "YOUR_PRIVATE_KEY" --project LedgeLink.AppHost
+    dotnet user-secrets set "Ethereum:ContractAddress" "YOUR_CONTRACT_ADDRESS" --project LedgeLink.AppHost
+    ```
 
 ---
 
