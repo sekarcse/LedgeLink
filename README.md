@@ -78,7 +78,13 @@ dotnet build LedgeLink.sln
 dotnet run --project LedgeLink.AppHost
 ```
 
-> **Note:** By default, the app runs in **Simulation Mode** (generating fake hashes) if no blockchain credentials are found. See the [Live Blockchain Setup](#live-blockchain-setup) section to use a real testnet.
+### 🚀 Ready to run: Simulation Mode
+The application is configured to run out-of-the-box in **Simulation Mode**.
+*   **No blockchain setup required** to start exploring.
+*   The system will automatically detect the absence of credentials, log a warning, and generate simulated transaction hashes.
+*   All UI features (links, status updates) and API endpoints will function exactly as they would in a live environment.
+
+To move to a real testnet, see the [Live Blockchain Setup](#live-blockchain-setup) section below.
 
 ---
 
