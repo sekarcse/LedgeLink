@@ -8,7 +8,7 @@
 
 LedgeLink simulates a real-world trade settlement flow between two financial institutions — **Hargreaves Lansdown** (Distributor) and **Schroders** (Asset Manager). When a trade is submitted, it flows through a distributed pipeline, gets anchored to the Ethereum blockchain, and both parties see the result update live on their dashboards.
 
-### Technical Flow
+### Technical Flow Chart
 
 ```text
 [ USER/SYSTEM ]
@@ -35,37 +35,20 @@ LedgeLink simulates a real-world trade settlement flow between two financial ins
 
 ---
 
-## Blockchain Hash Anchoring
+## Blockchain Hash Anchoring (Layman's Terms)
 
-After settlement, `Settlement.Worker` publishes a unique digital fingerprint of the trade to the Ethereum Sepolia testnet via a **Smart Contract**. This provides an **immutable on-chain receipt** that neither party can alter.
+*   **Who adds to the blockchain?** The Settlement Worker (acting as a "Digital Notary").
+*   **Where is it stored?** On the Ethereum Sepolia Testnet—a public, global network where data is immutable (it cannot be changed or deleted by anyone).
+*   **How does it get updated?** A **Smart Contract** records the trade's unique digital fingerprint (hash).
+*   **Why?** If someone tampered with the trade amount in the local database after settlement, the system would detect that the fingerprint no longer matches the one anchored on the blockchain.
 
-### How it Works (Layman's Terms)
-*   **Who adds to the blockchain?** The Settlement Worker (the "Digital Notary").
-*   **Where is it stored?** On the Ethereum Sepolia Testnet—a public, global network where data cannot be changed or deleted.
-*   **Why?** If someone tries to tamper with the trade amount in the local MongoDB database, the system compares it with the fingerprint on the blockchain. If they don't match, the fraud is instantly detected.
-
-### Smart Contract (Solidity)
+### Example: Smart Contract Logic (Solidity)
 ```solidity
-// HashAnchor.sol
 mapping(string => bytes32) private _anchors;
 
 function anchorHash(string id, bytes32 fingerprint) public {
     require(_anchors[id] == 0, "Already anchored!");
     _anchors[id] = fingerprint;
-}
-```
-
-### Nethereum Integration (C#)
-```csharp
-public async Task<string> AnchorHashAsync(string orderId, string sha256Hash)
-{
-    var account = new Account(privateKey);
-    var web3 = new Web3(account, rpcUrl);
-
-    var txHash = await contract.GetFunction("anchorHash")
-        .SendTransactionAsync(account.Address, orderId, sha256Hash);
-
-    return txHash;
 }
 ```
 
@@ -79,13 +62,6 @@ public async Task<string> AnchorHashAsync(string orderId, string sha256Hash)
 | .NET Aspire workload | 9.1+ | `dotnet workload install aspire` |
 | Docker Desktop | Latest | https://www.docker.com/products/docker-desktop/ |
 
-**Verify your setup:**
-```bash
-dotnet --version        # Should be 9.x
-dotnet workload list    # Should show: aspire
-docker --version        # Docker must be running
-```
-
 ---
 
 ## Quick Start
@@ -98,27 +74,24 @@ cd LedgeLink
 # 2. Build the solution
 dotnet build LedgeLink.sln
 
-# 3. Run the Aspire AppHost — starts ALL services automatically
+# 3. Run the Aspire AppHost
 dotnet run --project LedgeLink.AppHost
 ```
 
-> **Note:** For blockchain anchoring to work, ensure `Ethereum__RpcUrl`, `Ethereum__PrivateKey`, and `Ethereum__ContractAddress` are configured in your environment or `appsettings.json`.
+> **Note:** For blockchain anchoring, ensure `Ethereum__RpcUrl`, `Ethereum__PrivateKey`, and `Ethereum__ContractAddress` are configured in your environment.
 
 ---
 
-## Hash Verification (Double Integrity Check)
+## Integrity Verification
 
-To verify a trade:
+To verify a trade's integrity:
 ```
 GET /api/trades/{externalOrderId}/verify
 ```
 
 The system performs a **Double Integrity Check**:
-1. **Local Check**: Recomputes the SHA-256 hash and compares it with the MongoDB record.
-2. **On-Chain Check**: Retrieves the anchored hash from Ethereum and compares it with the local record.
-
-**Result:**
-> ✅ **DOUBLE VERIFIED** — Ledger and Blockchain both match.
+1. **Local Check**: Recomputes the SHA-256 hash and compares it with the database record.
+2. **On-Chain Check**: Compares the database record with the anchored hash on Ethereum.
 
 ---
 
@@ -127,26 +100,22 @@ The system performs a **Double Integrity Check**:
 ```
 LedgeLink/
 ├── LedgeLink.AppHost/              # Aspire orchestration
-├── LedgeLink.Shared/               # Domain models, HashService
-├── LedgeLink.Distributor.API/      # Trade submission + Verification API
+├── LedgeLink.Shared/               # Domain models & Hash logic
+├── LedgeLink.Distributor.API/      # Trade submission & Verification
 ├── LedgeLink.Validator.Worker/     # Business rule validation
-├── LedgeLink.Settlement.Worker/    # SHA-256 seal + Blockchain Anchoring
-└── LedgeLink.Participant.UI/       # Blazor Server Dashboards (HL & Schroders)
+├── LedgeLink.Settlement.Worker/    # SHA-256 seal & Blockchain Anchoring
+└── LedgeLink.Participant.UI/       # Blazor Server Dashboards
 ```
 
 ---
 
-## Phase 3: Pi4 K8s Deployment (Future)
+## Phase 2: Pi4 K8s Deployment (Future)
 
-The next phase moves the entire stack from local Aspire orchestration to a real multi-node K8s cluster running on Raspberry Pi 4 hardware.
+The next phase moves the stack from local Aspire orchestration to a real multi-node K8s cluster running on Raspberry Pi 4 hardware.
 
 ### Checklist
-- [x] Deploy simple hash-anchor smart contract to Sepolia
-- [x] Add Nethereum to Settlement.Worker
-- [x] Add `txHash` field to `TradeToken`
-- [x] Update verify endpoint to check on-chain hash
-- [x] Show Etherscan link in both Participant UIs
 - [ ] Set up K3s cluster on Pi4 nodes
 - [ ] Swap Service Bus → Kafka in AppHost
 - [ ] Build ARM64 Docker images
 - [ ] Generate and apply K8s manifests via aspirate
+- [ ] Configure persistent volumes for MongoDB on Pi4
