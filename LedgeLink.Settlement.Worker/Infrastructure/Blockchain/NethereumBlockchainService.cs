@@ -1,4 +1,5 @@
 using LedgeLink.Settlement.Worker.Application.Interfaces;
+using LedgeLink.Shared.Application.Services;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Nethereum.Hex.HexConvertors.Extensions;
@@ -36,7 +37,7 @@ public sealed class NethereumBlockchainService : IBlockchainService
             var account = new Account(_privateKey);
             var web3 = new Web3(account, _rpcUrl);
 
-            var anchoredHash = ComputeAnchoredHash(externalOrderId, sha256Hash, timestamp);
+            var anchoredHash = BlockchainHashService.ComputeAnchoredHash(externalOrderId, sha256Hash, timestamp);
 
             var contract = web3.Eth.GetContract(GetAbi(), _contractAddress);
             var anchorFunction = contract.GetFunction("anchorHash");
@@ -87,19 +88,6 @@ public sealed class NethereumBlockchainService : IBlockchainService
             _logger.LogError(ex, "Failed to retrieve anchored hash for {ExternalOrderId} from blockchain.", externalOrderId);
             return (false, null);
         }
-    }
-
-    private byte[] ComputeAnchoredHash(string externalOrderId, string sha256Hash, DateTime timestamp)
-    {
-        // keccak256(externalOrderId + sha256Hash + timestamp)
-        // Match MongoDB's storage precision for timestamp
-        var preciseTimestamp = new DateTime(
-            timestamp.Ticks / TimeSpan.TicksPerMillisecond * TimeSpan.TicksPerMillisecond,
-            DateTimeKind.Utc);
-
-        var raw = $"{externalOrderId}{sha256Hash}{preciseTimestamp:O}";
-        var bytes = Encoding.UTF8.GetBytes(raw);
-        return Nethereum.Util.Sha3Keccack.Current.CalculateHash(bytes);
     }
 
     private string GetAbi()

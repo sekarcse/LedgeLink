@@ -104,9 +104,13 @@ public sealed class TradesController : ControllerBase
             return NotFound(new { error = $"Trade '{externalOrderId}' not found." });
 
         var isLocalValid = LedgeLink.Shared.Application.Services.HashService.VerifyHash(trade);
-        var (isAnchored, anchoredHash) = await blockchain.GetAnchoredHashAsync(externalOrderId, ct);
+        var (isAnchored, onChainFingerprint) = await blockchain.GetAnchoredHashAsync(externalOrderId, ct);
 
-        var isOnChainValid = isAnchored && string.Equals(anchoredHash, trade.SharedHash, StringComparison.OrdinalIgnoreCase);
+        // Recompute the expected fingerprint to verify against the on-chain anchor
+        var expectedFingerprint = LedgeLink.Shared.Application.Services.BlockchainHashService.ComputeAnchoredHashHex(
+            trade.ExternalOrderId, trade.SharedHash ?? "", trade.Timestamp);
+
+        var isOnChainValid = isAnchored && string.Equals(onChainFingerprint, expectedFingerprint, StringComparison.OrdinalIgnoreCase);
 
         var explorerBase = _configuration["Ethereum:BlockExplorerUrl"] ?? "https://sepolia.etherscan.io/tx/";
         var etherscanUrl = !string.IsNullOrEmpty(trade.BlockchainTxHash)

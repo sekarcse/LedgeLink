@@ -9,6 +9,7 @@
   <!-- Domain layer has ZERO external dependencies — pure C# only -->
   <ItemGroup>
     <PackageReference Include="MongoDB.Bson" Version="2.28.0" />
+    <PackageReference Include="Nethereum.Util" Version="5.8.0" />
   </ItemGroup>
 
 </Project>

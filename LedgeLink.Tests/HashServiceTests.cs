@@ -73,4 +73,24 @@ public class HashServiceTests
         // Assert
         Assert.False(isValid);
     }
+
+    [Fact]
+    public void BlockchainHash_IsConsistentWithCompositeFields()
+    {
+        // Arrange
+        var trade = new TradeToken
+        {
+            ExternalOrderId = "ORDER-1",
+            SharedHash = "SHA256-HASH",
+            Timestamp = DateTime.UtcNow
+        };
+
+        // Act
+        var hash1 = BlockchainHashService.ComputeAnchoredHashHex(trade.ExternalOrderId, trade.SharedHash, trade.Timestamp);
+        var hash2 = BlockchainHashService.ComputeAnchoredHashHex(trade.ExternalOrderId, trade.SharedHash, trade.Timestamp);
+
+        // Assert
+        Assert.Equal(hash1, hash2);
+        Assert.StartsWith("0x", hash1);
+    }
 }
