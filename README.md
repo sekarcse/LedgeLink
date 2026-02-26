@@ -147,7 +147,7 @@ While this Proof-of-Concept uses a public blockchain for anchoring, "real-world"
 
 ---
 
-## Phase 2: Pi4 K8s Deployment (Future)
+## Phase 2: K8s Deployment (Future)
 
 The next phase moves the stack from local Aspire orchestration to a real multi-node K8s cluster running on Raspberry Pi 4 hardware.
 
